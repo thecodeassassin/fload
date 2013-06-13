@@ -317,8 +317,12 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE')
         {
           $result = array('code' => 0, 'msg' => 'Not finding == not deleting that shit :(');
         }
-        echo json_encode($result, JSON_UNESCAPED_SLASHES);
       }
+      else
+      {
+        $result = array('code' => 0, 'msg' => 'Not finding == not deleting that shit :(');
+      }
+      echo json_encode($result, JSON_UNESCAPED_SLASHES);
     }
   }
   else
