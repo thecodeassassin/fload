@@ -33,7 +33,6 @@
 //
 // TODO: CLEANUP!!
 //
-// Search for more TODO's in the rest of this file ;)
 
 
 // We need some configuration
