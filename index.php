@@ -197,6 +197,7 @@ if($_SERVER['REQUEST_METHOD'] == 'PUT')
     
         // Add old metadata to result array
         $result = $file;
+        $result['deleteUrl'] = $config['URL'] . "delete/" . $result['_id'];
         unset($result['filePath']);
         unset($result['_id']);
         $result = array("code" => 1, "msg" => "Thank you for your file :)", "result" => $result);
@@ -216,19 +217,19 @@ if($_SERVER['REQUEST_METHOD'] == 'PUT')
   }
 }
 
-// If we get HTTP GET, they'll probably want to download something
+// If we get HTTP GET, they probably want to download something
 elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
   // let's confirm if a filename is requested
   if (count($_GET) > 0)
   {
-    // Filenames should be rewritten and passed as argument
-    if (isset($_GET['file']))
+    // Request URL should be rewritten and operation and file passed as argument
+    if (isset($_GET['op']) && ($_GET['op'] === 'show') && isset($_GET['key']))
     {
       if ($mc)
       {
         // Let's see if we have this file
-        $fileName = $_GET['file'];
+        $fileName = $_GET['key'];
         $filePath = $config['path'] . $fileName;
 
         // Query MongoDb for file info
@@ -270,13 +271,59 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
     else
     {
       // Okay something is clearly wrong
-      echo "WTF MAN!";
+      header("HTTP/1.0 405 Fuck Off");
+      echo "405 Fuck Off";
     }
   }
   else
   {
     // They did a GET request but didn't request a file :/ Maybe they know we do useful stuff like telling them which IP they're using to connect to us
     printf("%s\n",getenv("REMOTE_ADDR"));
+  }
+}
+
+// If we get HTTP DELETE, they want to delete stuff
+elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE')
+{
+  // Op should be 'delete'
+  $op = $_GET['op'];
+
+  // Key should be MongoId
+  $key = $_GET['key'];
+
+  // MongoId should match this
+  $expr = '/^[a-z0-9]{24}$/';
+
+  if (($op === 'delete') && preg_match($expr, $key))
+  {
+    if ($mc)
+    {
+      // Let's initialize this bitch as MongoId
+      $fileMongoId = new MongoId($_GET['key']);
+
+      // Does it exist?
+      $mcQuery = array('_id' => $fileMongoId);
+      $result = $mcFiles->findOne($mcQuery);
+      
+      if (($result) && is_readable($result['filePath']))
+      {
+        // Let's delete it \o/
+        if(unlink($result['filePath']))
+        {
+          $result = $mcFiles->remove($mcQuery);
+          $result = array('code' => 1, 'msg' => 'Thank you! The file is deleted :)');
+        }
+        else
+        {
+          $result = array('code' => 0, 'msg' => 'Not finding == not deleting that shit :(');
+        }
+        echo json_encode($result, JSON_UNESCAPED_SLASHES);
+      }
+    }
+  }
+  else
+  {
+    header("HTTP/1.0 405 Fuck Off");
   }
 }
 ?>
