@@ -52,7 +52,7 @@
 //$config['mongoDb']   = "mongodb_to_put_files_in";
 
 // I use an external file
-$config = parse_ini_file("config.ini");
+$config = parse_ini_file("../config.ini");
 
 // This function is a (really) minor modification of Aidan Lister's str_rand()
 function str_rand($length = 8, $seeds = 'alphanum')
@@ -197,7 +197,7 @@ if($_SERVER['REQUEST_METHOD'] == 'PUT')
     
         // Add old metadata to result array
         $result = $file;
-        $result['deleteUrl'] = $config['URL'] . "delete/" . $result['_id'];
+        $result['deleteUrl'] = $config['URL'] .  $result['_id'];
         unset($result['filePath']);
         unset($result['_id']);
         $result = array("code" => 1, "msg" => "Thank you for your file :)", "result" => $result);
@@ -223,8 +223,8 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
   // let's confirm if a filename is requested
   if (count($_GET) > 0)
   {
-    // Request URL should be rewritten and operation and file passed as argument
-    if (isset($_GET['op']) && ($_GET['op'] === 'show') && isset($_GET['key']))
+    // Request URL should be rewritten and file passed as argument
+    if (isset($_GET['key']) && !isset($_GET['op']))
     {
       if ($mc)
       {
@@ -251,14 +251,15 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
 
           // Let's store this success in DB so we can show off!
           $fileId = new MongoId($mcResult["_id"]);
-          $mcQuery = array("fileId" => $fileId, "timeStamp" => new MongoDate(), "remoteAddress" => getenv("REMOTE_ADDR"), "remoteUserAgent" => getenv("HTTP_USER_AGENT"));
+          $mcQuery = array("fileId" => $fileId, "fileName" => $fileName, "timeStamp" => new MongoDate(), "remoteAddress" => getenv("REMOTE_ADDR"), "remoteUserAgent" => getenv("HTTP_USER_AGENT"));
           $mcStats->insert($mcQuery);
+
 
           exit;
         }
         else
         {
-          header("HTTP/1.0 404 Not Found");
+          header("HTTP/1.1 404 Not Found");
           echo "No, never heared of $fileName";
         }
       }
@@ -268,11 +269,40 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
         die("Oh my gawwd! tErrOROROR");
       }
     }
+    elseif (isset($_GET['key']) && isset($_GET['op']))
+    {
+      if($_GET['op'] === "stats")
+      {
+        echo "stats for " . $_GET['key'] . "<br/>";
+        echo "<pre>";
+        $fileName = $_GET['key'];
+        $filePath = $config['path'] . $fileName;
+
+        // Query MongoDb for file info
+        $mcQuery = array("filePath" => $filePath);
+        $fileInfo = $mcFiles->findOne($mcQuery);
+
+        // Query MongoDb for stats
+        $fileId = $fileInfo["_id"];
+        $mcQuery = array("fileId" => $fileId);
+        $fileStats = $mcStats->find($mcQuery);
+        $fileStats->sort(array("timeStamp" => 1));
+        $fileCount = (string)$fileStats->count();
+        echo "Downloaded: " . $fileCount . " times<br/>";
+        /*foreach ($fileStats as $stats)
+        {
+          var_dump($stats);
+        }*/
+        echo "</pre>";
+
+
+      }
+    }
     else
     {
       // Okay something is clearly wrong
-      header("HTTP/1.0 405 Fuck Off");
-      echo "405 Fuck Off";
+      header("HTTP/1.1 405 Fuck Off");
+      echo "405: Computer says \"No!\"";
     }
   }
   else
@@ -283,18 +313,15 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
 }
 
 // If we get HTTP DELETE, they want to delete stuff
-elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE')
+elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE' && isset($_GET['key']))
 {
-  // Op should be 'delete'
-  $op = $_GET['op'];
-
   // Key should be MongoId
   $key = $_GET['key'];
 
   // MongoId should match this
   $expr = '/^[a-z0-9]{24}$/';
 
-  if (($op === 'delete') && preg_match($expr, $key))
+  if (preg_match($expr, $key))
   {
     if ($mc)
     {
@@ -327,7 +354,8 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'DELETE')
   }
   else
   {
-    header("HTTP/1.0 405 Fuck Off");
+    header("HTTP/1.1 405 Fuck Off");
+    echo "405: Computer says \"No!\"";
   }
 }
 ?>
