@@ -87,6 +87,10 @@ function str_rand($length = 8, $seeds = 'alphanum')
   return $str;
 }
 
+function filter(&$value) {
+  $value = htmlspecialchars($value, ENT_HTML5);
+}
+
 
 // Create MongoDB connection
 $mc = new Mongo();
@@ -273,8 +277,6 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
     {
       if($_GET['op'] === "stats")
       {
-        echo "stats for " . $_GET['key'] . "<br/>";
-        echo "<pre>";
         $fileName = $_GET['key'];
         $filePath = $config['path'] . $fileName;
 
@@ -287,13 +289,31 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
         $mcQuery = array("fileId" => $fileId);
         $fileStats = $mcStats->find($mcQuery);
         $fileStats->sort(array("timeStamp" => 1));
-        $fileCount = (string)$fileStats->count();
-        echo "Downloaded: " . $fileCount . " times<br/>";
-        /*foreach ($fileStats as $stats)
+        $statsCount = $fileStats->count();
+        $fileStats = iterator_to_array($fileStats, true);
+        $tpl = array(
+          "fileName" => $fileName,
+          "statsCount" => $statsCount,
+          "stats" => $fileStats);
+        array_walk_recursive($tpl, "filter");
+        define('TPL', 1);
+        include('../stats.inc.php');
+/*        echo "Downloaded: " . $fileCount . " times<br/>\n";
+        echo "<table>\n";
+        echo "  <tr>\n";
+        echo "    <th>Date</th>\n";
+        echo "    <th>Requestor</th>\n";
+        echo "    <th>User Agent</th>\n";
+        echo "  </tr>\n";
+        foreach ($fileStats as $stats)
         {
-          var_dump($stats);
-        }*/
-        echo "</pre>";
+          echo "  <tr>\n";
+          echo "    <td>" . date('c', $stats['timeStamp']->sec) . "</td>\n";
+          echo "    <td>" . $stats['remoteAddress'] . "</td>\n";
+          echo "    <td>" . $stats['remoteUserAgent'] . "</td>\n";
+          echo "  </tr>\n";
+        }
+        echo "</table>\n";*/
 
 
       }
