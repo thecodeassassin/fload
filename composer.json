@@ -1,0 +1,23 @@
+{
+    "name": "thecodeassassom/fload",
+    "description": "HTTP-PUT based file service",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Stephen Hoogendijk",
+            "email": "admin@tca0.nl"
+        },
+        {
+            "name": "Frits Vlaanderen",
+            "email": "frits@hccniet.nl"
+        }
+    ],
+    "require": {
+        "slim/slim": "2.4.0"
+    },
+    "autoload": {
+        "psr-0": {"Fload\\": "library/Fload"}
+    }
+
+
+}

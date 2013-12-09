@@ -1,4 +1,4 @@
-fload
+Fload
 =====
 
 File upload script based on HTTP PUT
@@ -8,12 +8,21 @@ Easy to use:
 curl -T yourfile http://domain.com
 
 or
-cat yourfile | curl -T http://domain.com
+cat yourfile | curl -T . http://domain.com
 
 or
-echo 'test paste' | curl -T http://domain.com
+echo 'test paste' | curl -T . http://domain.com
 
-or
-etc.
 
 Output is metadata, URL, and more stuff in JSON.
+
+Installation
+===
+1. Run curl -sS https://getcomposer.org/installer | php to fetch composer
+2. run php composer.phar install
+
+
+Requirements
+===
+* HTTP server (nginx, apache, lighttpd)
+* PHP 5.3+
