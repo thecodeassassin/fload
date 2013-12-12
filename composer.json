@@ -13,10 +13,13 @@
         }
     ],
     "require": {
-        "slim/slim": "2.4.0"
+        "slim/slim": "2.4.0",
+        "pimple/pimple": "1.1.*"
     },
     "autoload": {
-        "psr-0": {"Fload\\": "library/Fload"}
+        "psr-0": {
+            "Fload": "app/library/"
+        }
     }
 
 

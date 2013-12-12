@@ -1,2 +1,4 @@
 vendor/*
 composer.phar
+app/config/config.php
+app/log/*

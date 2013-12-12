@@ -21,8 +21,8 @@ Installation
 1. Run curl -sS https://getcomposer.org/installer | php to fetch composer
 2. run php composer.phar install
 
-
 Requirements
 ===
 * HTTP server (nginx, apache, lighttpd)
 * PHP 5.3+
+* Mongo php extension (sudo pecl install mongo) (or implement your own dataProvider)
