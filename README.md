@@ -8,10 +8,10 @@ Easy to use:
 curl -T yourfile http://domain.com
 
 or
-cat yourfile | curl -T http://domain.com
+cat yourfile | curl -T- http://domain.com
 
 or
-echo 'test paste' | curl -T http://domain.com
+echo 'test paste' | curl -T- http://domain.com
 
 or
 etc.
