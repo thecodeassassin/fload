@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors' , 1);
 /*
  * ----------------------------------------------------------------------------
  * "THE BEER-WARE LICENSE" (Revision 42):
@@ -44,15 +46,15 @@
 //
 
 
-// We need some configuration
-//   Pass it here, or use an external (ini) file
-//$config['path']      = "/absoulte/path/to/your/data";
-//$config['URL']       = "http://url.com;
-//$config['chunkSize'] = 8192;
-//$config['mongoDb']   = "mongodb_to_put_files_in";
+// Attempt to read the configuration
+$configFile = __DIR__ . '/../config.ini';
+
+if (!is_readable($configFile)) {
+   die('No config.ini found in root directory');
+}
 
 // I use an external file
-$config = parse_ini_file("../config.ini");
+$config = parse_ini_file($configFile, true);
 
 // This function is a (really) minor modification of Aidan Lister's str_rand()
 function str_rand($length = 8, $seeds = 'alphanum')
@@ -92,13 +94,22 @@ function filter(&$value) {
 }
 
 
+$authentication = array();
+
+if ($config['mongo']['enableAuth']) {
+    $authentication =  array("username" => $config['mongo']['username'], "password" => $config['mongo']['password']);
+}
+
 // Create MongoDB connection
-$mc = new Mongo();
-$db = $config['mongoDb'];
+$mc = new MongoClient("mongodb://localhost", $authentication);
+
+$db = $config['mongo']['db'];
 // Select file collection
 $mcFiles = $mc->selectDB($db)->selectCollection("files");
 // Select stats collection
 $mcStats = $mc->selectDB($db)->selectCollection("stats");
+
+
 
 if($_SERVER['REQUEST_METHOD'] == 'PUT')
 {
@@ -224,6 +235,8 @@ if($_SERVER['REQUEST_METHOD'] == 'PUT')
 // If we get HTTP GET, they probably want to download something
 elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
 {
+
+
   // let's confirm if a filename is requested
   if (count($_GET) > 0)
   {
@@ -232,6 +245,7 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
     {
       if ($mc)
       {
+	
         // Let's see if we have this file
         $fileName = $_GET['key'];
         $filePath = $config['path'] . $fileName;
@@ -258,6 +272,7 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
           $mcQuery = array("fileId" => $fileId, "fileName" => $fileName, "timeStamp" => new MongoDate(), "remoteAddress" => getenv("REMOTE_ADDR"), "remoteUserAgent" => getenv("HTTP_USER_AGENT"));
           $mcStats->insert($mcQuery);
 
+	  echo file_get_contents($filePath);
 
           exit;
         }

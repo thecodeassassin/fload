@@ -1,0 +1,14 @@
+; main configuration
+
+; don't forget the trailing slash!
+path = "/srv/fload/files/"
+URL = "http://fload/"
+chunkSize = 8192
+
+; mongo specific configuration
+[mongo]
+enableAuth = 0
+db = 'files'
+username = ''
+password = ''
+
