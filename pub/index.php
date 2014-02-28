@@ -25,7 +25,6 @@
  *                                  *
  \**********************************/
 
-// TODO: Make more stuff configurable (isn't this just cleanup?)
 //
 // TODO: Rewrite upload part to checksum each chunk, store the checksums in mongodb.
 //        This way we can detect if a similar file already exists before it is fully uploaded.
@@ -33,12 +32,6 @@
 // TODO: Remove writing to tmpfile, write directly to destination
 //
 // TODO: Do something with the statistics in stats collection
-//
-// TODO: rewrite all mongoDB stuff to support $otherDB backends as well
-//
-// TODO: Remove all apache dependency (Done?)
-//        Confirm if I work with $otherWebserver
-//        Webserver needs support for chunking!
 //
 // TODO: CLEANUP!!
 //
@@ -265,12 +258,17 @@ elseif ($_SERVER['REQUEST_METHOD'] == 'GET')
           // Let's not force a download dialog, but we can with the following header
           // header("Content-Disposition: attachment; filename=\"$fileName\"");
 
+	   // Let's not force a download dialog, but we can with the following header
+          header("Content-Disposition: inline; filename=\"$fileName\"");
+
+          ob_clean();
+          flush();
+          readfile($filePath);
+
           // Let's store this success in DB so we can show off!
           $fileId = new MongoId($mcResult["_id"]);
           $mcQuery = array("fileId" => $fileId, "fileName" => $fileName, "timeStamp" => new MongoDate(), "remoteAddress" => getenv("REMOTE_ADDR"), "remoteUserAgent" => getenv("HTTP_USER_AGENT"));
           $mcStats->insert($mcQuery);
-
-	  echo file_get_contents($filePath);
 
           exit;
         }
